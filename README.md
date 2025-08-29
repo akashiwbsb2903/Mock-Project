@@ -73,8 +73,4 @@ streamlit run app.py
 
 Or run all scripts as needed from the root or respective folders.
 
-## Contributing
-Feel free to fork the repository and submit pull requests.
 
-## License
-This project is for educational and demonstration purposes.
