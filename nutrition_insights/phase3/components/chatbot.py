@@ -74,7 +74,6 @@ def _format_context(snippets: list[dict]) -> str:
 def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
 
     st.markdown("""
-        <h1 style='font-size:2.2rem; color:#7ee787; margin-bottom:0.5em;'>💬 Protein Chatbot</h1>
         <div style='color:#aaa; font-size:1.1rem; margin-bottom:1.5em;'>Ask about protein timing, dose, safety, or trends. Get science-backed answers instantly.</div>
     """, unsafe_allow_html=True)
     _init_state()

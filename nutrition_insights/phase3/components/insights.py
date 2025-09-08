@@ -7,8 +7,8 @@ from collections import Counter, defaultdict
 from typing import Iterable, List, Tuple
 import json
 
-from utils.common import tokenize, protein_keywords
-from utils.charts import bar, heatmap
+from nutrition_insights.phase3.utils.common import tokenize, protein_keywords
+from nutrition_insights.phase3.utils.charts import bar, heatmap
 
 
 # ---- helpers ----
@@ -58,7 +58,7 @@ def render_buzz(df: pd.DataFrame, meta=None) -> None:
         return
 
     # Only keep protein-related posts
-    from utils.common import looks_protein_related
+    from nutrition_insights.phase3.utils.common import looks_protein_related
     def safe_concat(*args):
         return " ".join([str(x) if not isinstance(x, float) else "" for x in args])
     protein_mask = sdf.apply(lambda r: looks_protein_related(safe_concat(r.get("title", ""), r.get("summary", ""), r.get("text", ""))), axis=1)
@@ -87,7 +87,7 @@ def render_buzz(df: pd.DataFrame, meta=None) -> None:
             seen_refs.add(url)
     buzz_context = "\n".join(buzz_evidence)
 
-    from utils.openai_client import chat_completion
+    from nutrition_insights.phase3.utils.openai_client import chat_completion
     prompt = (
         "Give 5 points. Summarize the latest community buzz from Reddit and Blogs on dietary protein-related topics. "
         "Use the following posts as evidence. List each finding as a bullet point. "
@@ -141,7 +141,7 @@ def render(df: pd.DataFrame, meta=None) -> None:
             break
     journal_context = "\n".join(journal_evidence)
 
-    from utils.openai_client import chat_completion
+    from nutrition_insights.phase3.utils.openai_client import chat_completion
     prompt = (
         "strictly give 5 summarize bullet points as a list of the latest verified findings from journals on dietry protein-related topics. "
         "Focus on practical, actionable, and business-relevant insights for product managers, marketers, and business leaders—avoid deep scientific jargon. "
@@ -193,7 +193,7 @@ def render_insights():
         context_snippets.append(f"- **{title}**: {text} (ref: {url})")
     context = "\n".join(context_snippets)
 
-    from utils.openai_client import chat_completion
+    from nutrition_insights.phase3.utils.openai_client import chat_completion
     prompt = (
         "provide 5 bullet points"
         "Summarize the latest dietry protein-related findings from journals and trusted sources. "

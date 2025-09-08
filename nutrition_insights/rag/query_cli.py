@@ -90,13 +90,18 @@ def load_index():
     return index, meta
 
 # NOTE: build_index uses an embedding function; at query time we mirror dim with a stable hash.
+from sentence_transformers import SentenceTransformer
+_MODEL = None
+def get_model():
+    global _MODEL
+    if _MODEL is None:
+        _MODEL = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
+    return _MODEL
+
 def embed_query(q: str, dim: int = 768) -> np.ndarray:
-    import hashlib
-    h = hashlib.sha256(q.encode("utf-8")).digest()
-    vals = [((h[i % len(h)] / 255.0) * 2.0 - 1.0) for i in range(dim)]
-    v = np.array(vals, dtype="float32")
-    n = np.linalg.norm(v) + 1e-9
-    return (v / n).reshape(1, -1)
+    model = get_model()
+    emb = model.encode([q], normalize_embeddings=True)
+    return np.asarray(emb).astype("float32")
 
 def topk(index, meta, qvec, k: int):
     D, I = index.search(qvec.astype("float32"), k)

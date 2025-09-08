@@ -7,8 +7,8 @@ from collections import Counter
 from typing import Iterable, List, Dict
 import json
 
-from utils.common import tokenize
-from utils.charts import bar
+from nutrition_insights.phase3.utils.common import tokenize
+from nutrition_insights.phase3.utils.charts import bar
 
 TEXT_COLS = ("title", "text", "summary", "content")
 

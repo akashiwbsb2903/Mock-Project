@@ -18,8 +18,8 @@ import json
 import re
 from collections import Counter, defaultdict
 
-from utils.openai_client import chat_completion
-from utils.common import looks_protein_related
+from nutrition_insights.phase3.utils.openai_client import chat_completion
+from nutrition_insights.phase3.utils.common import looks_protein_related
 
 
 # ----------------- Helper Functions -----------------
@@ -279,7 +279,7 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
     # =========================
     st.markdown("## 🌱 Consumer Preference Trends")
     # --- Word Cloud for Consumer Preference Trends ---
-    from utils.wordcloud_utils import render_wordcloud
+    from nutrition_insights.phase3.utils.wordcloud_utils import render_wordcloud
     # Use 'combined_text' if available, else fallback to 'text'
     text_col = 'combined_text' if 'combined_text' in df.columns else 'text'
     render_wordcloud(df, text_col=text_col, title="Consumer Preference Word Cloud")
