@@ -7,24 +7,24 @@ import math
 
 import pandas as pd
 
+
+
 from nutrition_insights.phase3.utils.common import (
     tokenize,
     normalize_text,
     looks_protein_related,
     ensure_utc,
+    is_in_scope,
 )
+# Import FAISS retrieval
+from nutrition_insights.phase3.utils.faiss_utils import faiss_topk
+from nutrition_insights.phase3.utils.retrieval import build_context_snippets, Snippet
 
 # ----------------------------------
 # Public API
 # ----------------------------------
 
-def is_in_scope(query: str) -> bool:
-    """
-    Guardrail: only allow nutrition/protein-like questions through.
-    """
-    if not isinstance(query, str) or not query.strip():
-        return False
-    return looks_protein_related(query)
+
 
 
 @dataclass(frozen=True)
@@ -46,17 +46,41 @@ def build_context_snippets(
     min_chars: int = 120,
     max_chars: int = 900,
     recency_boost: float = 0.10,  # small boost for newer items
+    prefer_journals: bool = False,
 ) -> List[Snippet]:
     """
     Rank and format context snippets for the LLM.
 
-    Expects df with columns: ['text','title','source','date','url'].
-    - Scores by token overlap with query (normalized) + optional recency boost.
-    - Trims to readable excerpts (min_chars..max_chars).
-    - Applies a per-source cap to keep variety.
+    Uses FAISS vector search for retrieval.
     """
-    if df is None or not len(df):
+    # Use FAISS to retrieve top-k relevant items
+    hits = faiss_topk(query, k=topn or 8)
+    if not hits:
         return []
+    # Format as Snippet dataclass list
+    snippets = []
+    for item in hits:
+        # Defensive: fallback for missing fields
+        title = item.get("title") or "(untitled)"
+        source = item.get("source") or "unknown"
+        date = item.get("date")
+        url = item.get("url")
+        text = item.get("text") or ""
+        # Truncate excerpt
+        excerpt = text[:max_chars]
+        if len(excerpt) < min_chars:
+            excerpt = text[:min_chars]
+        snippets.append(
+            Snippet(
+                title=title,
+                source=source,
+                date=date,
+                url=url,
+                excerpt=excerpt,
+                score=float(item.get("_score", 0.0)),
+            )
+        )
+    return snippets
 
     q_toks = set(tokenize(query))
     if not q_toks:
@@ -126,6 +150,8 @@ def build_context_snippets(
     query_lower = query.lower()
     if any(word in query_lower for word in trend_words):
         sources_to_include = ["reddit", "blogs", "journals"]
+    elif prefer_journals:
+        sources_to_include = ["journals", "blogs", "reddit"]
     else:
         sources_to_include = ["journals", "blogs", "reddit"]
 

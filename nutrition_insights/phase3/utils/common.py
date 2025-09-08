@@ -1,6 +1,15 @@
 
-# phase3/utils/common.py
 from __future__ import annotations
+# Add is_in_scope utility to break circular import
+def is_in_scope(query: str) -> bool:
+    """
+    Guardrail: only allow nutrition/protein-like questions through.
+    """
+    if not isinstance(query, str) or not query.strip():
+        return False
+    return looks_protein_related(query)
+
+# phase3/utils/common.py
 
 # ---------------------------
 # Export protein keywords for components

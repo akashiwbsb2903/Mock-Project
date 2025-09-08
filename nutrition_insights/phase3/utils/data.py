@@ -157,12 +157,19 @@ def _ensure_columns(df: pd.DataFrame) -> pd.DataFrame:
         .str.strip()
     )
 
-    # text/content (string). Your merged file already puts everything under 'combined_text'.
-    out["text"] = (
-        _coalesce_cols(out, ["combined_text", "text", "content", "body", "abstract", "selftext", "description"], default="")
-        .astype(str)
-        .str.strip()
-    )
+    # text/content (string). Always ensure both 'text' and 'combined_text' are filled for all sources
+    def _get_text_row(row):
+        for col in ["combined_text", "text", "content", "body", "abstract", "selftext", "description"]:
+            val = row.get(col, None)
+            if isinstance(val, str) and val.strip():
+                return val.strip()
+        return ""
+    if any(col in out.columns for col in ["combined_text", "text", "content", "body", "abstract", "selftext", "description"]):
+        out["text"] = out.apply(_get_text_row, axis=1)
+        out["combined_text"] = out.apply(_get_text_row, axis=1)
+    else:
+        out["text"] = ""
+        out["combined_text"] = ""
 
     # url/permalink (string)
     out["url"] = (

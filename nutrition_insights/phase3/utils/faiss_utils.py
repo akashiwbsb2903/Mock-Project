@@ -2,11 +2,11 @@ import faiss
 import numpy as np
 import json
 from pathlib import Path
+
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 FAISS_INDEX = DATA_DIR / "faiss.index"
 INDEX_META = DATA_DIR / "index_meta.jsonl"
 INDEX_INFO = DATA_DIR / "index_info.json"
-
 
 def load_faiss_index():
     if not FAISS_INDEX.exists() or not INDEX_META.exists():

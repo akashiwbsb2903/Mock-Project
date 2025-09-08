@@ -5,18 +5,28 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 # phase3/components/chatbot.py
 
 import streamlit as st
+st.set_page_config(page_title="Protein Chatbot", page_icon="🤖", layout="wide")
+
+with st.sidebar:
+    st.title("ProteinScope Chatbot")
+    st.markdown("""
+    Ask anything about protein timing, safety, trends, or research. Powered by LLMs and real data sources.
+    """)
+
+import streamlit as st
 import pandas as pd
 
 
 # Use Gemini for LLM, but RAG for retrieval/context
-from nutrition_insights.phase3.utils.openai_client import chat_completion
+from nutrition_insights.phase3.utils.openai_client import chat_completion, nvidia_oss_chat_completion
 
 # Import RAG retrieval and context logic
-from nutrition_insights.phase3.services.query_router import is_in_scope, build_context_snippets
+from nutrition_insights.phase3.utils.common import is_in_scope
+from nutrition_insights.phase3.utils.retrieval import build_context_snippets
 
 
 def get_openai_response(prompt: str, system: str = None, timeout: int = 60) -> str:
-    return chat_completion(prompt, system=system, timeout=timeout)
+    return nvidia_oss_chat_completion(prompt, system=system, timeout=timeout)
 
 
 OUT_OF_SCOPE = (
@@ -63,13 +73,27 @@ def _format_context(snippets: list[dict]) -> str:
 
 def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
 
-    st.subheader("Chatbot")
+    st.markdown("""
+        <h1 style='font-size:2.2rem; color:#7ee787; margin-bottom:0.5em;'>💬 Protein Chatbot</h1>
+        <div style='color:#aaa; font-size:1.1rem; margin-bottom:1.5em;'>Ask about protein timing, dose, safety, or trends. Get science-backed answers instantly.</div>
+    """, unsafe_allow_html=True)
     _init_state()
     _render_history()
+
 
     q = st.chat_input("Ask about protein (timing, dose, safety, trends)...")
     if not q:
         st.caption("Tip: try “Best time for whey?”, “Collagen trending complaints?”, “BCAA vs EAA?”.")
+        return
+
+    # Greeting intent handler
+    greeting_triggers = ["hi", "hello", "hey", "help"]
+    if q.strip().lower() in greeting_triggers or any(q.strip().lower().startswith(g + " ") for g in greeting_triggers):
+        greeting_msg = "Hey, I am a protein research assistant. How can I help you?"
+        st.session_state.chat_history.append({"role": "user", "content": q})
+        st.session_state.chat_history.append({"role": "assistant", "content": greeting_msg})
+        with st.chat_message("assistant"):
+            st.markdown(greeting_msg)
         return
 
     # Guardrail
@@ -78,7 +102,6 @@ def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
         st.session_state.chat_history.append({"role": "assistant", "content": OUT_OF_SCOPE})
         with st.chat_message("assistant"):
             st.markdown(OUT_OF_SCOPE)
-        st.info(":mag: [DEBUG] Out of scope — not a protein-related question.")
         return
 
     # Filter dataframe by source_filter and window_days before building context snippets
@@ -100,7 +123,46 @@ def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
             df_filtered = df_filtered[parsed_dates >= cutoff]
         except Exception:
             pass
-    snippets = build_context_snippets(df_filtered, q, topn=8)
+
+
+    # --- Agentic source selection using LangChain agent ---
+    from nutrition_insights.phase3.langchain_agent import select_source_agent
+    agentic_source = select_source_agent(q)
+    st.info(f"[DEBUG] agentic_source selected: {agentic_source}")
+    # Filter by agentic source if not 'all'
+    if agentic_source == 'reddit_blogs' and 'source' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered['source'].str.lower().isin(['reddit', 'blogs'])]
+    elif agentic_source != 'all' and 'source' in df_filtered.columns:
+        df_filtered = df_filtered[df_filtered['source'].str.lower() == agentic_source]
+
+    # DEBUG: Show dataframe shape and source counts after agentic filtering
+    st.info(f"[DEBUG] df_filtered shape after agentic source: {df_filtered.shape}")
+    if 'source' in df_filtered.columns:
+        st.info(f"[DEBUG] Source value counts: {df_filtered['source'].value_counts().to_dict()}")
+        st.info(f"[DEBUG] Unique sources in df_filtered: {df_filtered['source'].unique().tolist()}")
+
+    # DEBUG: Show the actual dataframe after agentic filtering
+    st.dataframe(df_filtered, use_container_width=True)
+
+    # Use both 'text' and 'combined_text' columns for context if available
+    df_for_context = df_filtered.copy()
+    if "combined_text" in df_for_context.columns and "text" in df_for_context.columns:
+        def merge_texts(row):
+            t1 = str(row.get("text", "")).strip()
+            t2 = str(row.get("combined_text", "")).strip()
+            if t1 and t2:
+                return t1 + "\n" + t2 if t1 != t2 else t1
+            return t1 or t2
+        df_for_context["text"] = df_for_context.apply(merge_texts, axis=1)
+    elif "combined_text" in df_for_context.columns:
+        df_for_context["text"] = df_for_context["combined_text"]
+    # else: keep 'text' as is
+
+    # Build context snippets as before, passing agentic_source for FAISS filtering
+    snippets = build_context_snippets(df_for_context, q, topn=500, agentic_source=agentic_source)
+    # DEBUG: Show sources of the final context snippets
+    snippet_sources = [getattr(s, 'source', None) for s in snippets]
+    st.info(f"[DEBUG] Sources of final context snippets: {snippet_sources}")
     context = _format_context(snippets)
     # Debug: Show why out of scope
     if not snippets:
@@ -114,6 +176,8 @@ def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
         f"User question: {q}\n\n"
         f"Below are context snippets from research journals, blogs, and Reddit. "
         f"Base your answer strictly on the provided context. Do not repeat generic advice. "
+        f"When using information from the context snippets, cite them in your answer using [n] where n is the snippet number. "
+        f"At the end of your answer, include all [n] references you used. "
         f"If the context is not relevant, say: {OUT_OF_SCOPE}. "
         f"If there are different opinions, summarize them. Use evidence from all sources (journals, blogs, reddit).\n\n"
         f"{context}\n\n"
@@ -122,10 +186,10 @@ def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
     )
 
     with st.spinner("Thinking..."):
-        reply = chat_completion(
-            prompt=user_prompt,
+        reply = nvidia_oss_chat_completion(
+            user_prompt,
             system=_system_prompt(),
-            timeout=180,
+            timeout=180
         )
 
     st.session_state.chat_history.append({"role": "user", "content": q})

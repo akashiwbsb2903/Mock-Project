@@ -3,7 +3,7 @@
 Reddit scraper with append + incremental mode.
 
 Features
-- Uses --since ISO-8601 (preferred) or --days (default 30) to fetch only fresh posts
+- Uses --since ISO-8601 (preferred) or --days (default 60) to fetch only fresh posts
 - Appends to data/reddit.json instead of replacing, with robust dedupe
 - Stores last_run_iso in data/state_reddit.json for the next incremental run
 - Wider protein-focused keywords; multiple relevant subreddits
@@ -15,8 +15,8 @@ Credentials (ENV)
   REDDIT_USER_AGENT   (e.g., "nutrition-insights/1.0 by yourname")
 
 Example:
-  python scrappers/reddit_scrapper.py --since 2025-08-01T00:00:00Z --limit 60 --comments 8
-  python scrappers/reddit_scrapper.py --days 30
+  python scrappers/reddit_scrapper.py --since 2025-08-01T00:00:00Z --limit 300 --comments 20S
+  python scrappers/reddit_scrapper.py --days 60
 """
 
 import os
@@ -36,7 +36,7 @@ OUT_FILE = DATA_DIR / "reddit.json"
 STATE_FILE = DATA_DIR / "state_reddit.json"
 
 # ---------- Defaults ----------
-DEFAULT_DAYS = int(os.getenv("REDDIT_DAYS_BACK", "365"))  # 1 year
+DEFAULT_DAYS = int(os.getenv("REDDIT_DAYS_BACK", "60"))  # 2 MONTHS
 POST_LIMIT = int(os.getenv("REDDIT_POST_CAP", "300"))  # up to 300 posts
 COMMENTS_LIMIT = int(os.getenv("REDDIT_COMMENTS_LIMIT", "20"))  # up to 20 comments per post
 

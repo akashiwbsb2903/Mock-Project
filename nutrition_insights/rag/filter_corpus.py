@@ -106,8 +106,8 @@ TITLE_BOOST = 2          # if keyword occurs in title
 SOURCE_BOOSTS = {
     "pubmed": 0.2,          # journals / higher quality
     "journal": 0.2,
-    "reddit": 2.0,          # community
-    "blog": 1.05,           # semi‑formal
+    "reddit": 2,          # community
+    "blogs": 2,           # semi‑formal
     "news": 1.0,
 }
 

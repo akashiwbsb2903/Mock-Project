@@ -1,5 +1,14 @@
-# phase3/components/business.py
+
 from __future__ import annotations
+# Modern UI: set page config and sidebar only once at the top
+import streamlit as st
+st.set_page_config(page_title="Protein Business Dashboard", page_icon="📊", layout="wide")
+with st.sidebar:
+    st.title("Protein Business Dashboard")
+    st.markdown("""
+    Explore market trends, consumer preferences, and business opportunities in the protein sector. Powered by LLMs and real-world data.
+    """)
+# phase3/components/business.py
 
 import streamlit as st
 import plotly.express as px
@@ -178,7 +187,11 @@ def clean_llm_output(text: str) -> str:
 
 
 def render(source_filter: str = None, model: str | None = None, refresh_key: int = 0) -> None:
-    # ...existing code...
+    st.markdown("""
+        <h1 style='font-size:2.2rem; color:#ffd700; margin-bottom:0.5em;'>📊 Protein Business Dashboard</h1>
+        <div style='color:#aaa; font-size:1.1rem; margin-bottom:1.5em;'>Market insights, consumer trends, and actionable business intelligence for protein products.</div>
+    """, unsafe_allow_html=True)
+    st.markdown("<div style='height:12px'></div>", unsafe_allow_html=True)
     combined_data, err = cached_analysis(refresh_key, source_filter or "All", model)
     if err:
         st.error(err)
@@ -210,6 +223,7 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
                         form_counts[form] += 1
                         break
     form_counts = {k: v for k, v in form_counts.items() if v > 0}
+    # ...existing code...
     if form_counts:
         st.bar_chart(pd.Series(form_counts).sort_values(), use_container_width=True)
     else:
@@ -252,6 +266,7 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
                 if re.search(re.escape(brand), text, re.IGNORECASE):
                     brand_counts[brand] += 1
     brand_counts = {b: c for b, c in brand_counts.items() if c > 0}
+    # ...existing code...
     if brand_counts:
         horizontal_bar_chart(brand_counts, title="Top Mentioned Brands", x_label="Mentions", y_label="Brand")
     else:
@@ -263,6 +278,11 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
     # 2) CONSUMER PREFERENCE TRENDS
     # =========================
     st.markdown("## 🌱 Consumer Preference Trends")
+    # --- Word Cloud for Consumer Preference Trends ---
+    from utils.wordcloud_utils import render_wordcloud
+    # Use 'combined_text' if available, else fallback to 'text'
+    text_col = 'combined_text' if 'combined_text' in df.columns else 'text'
+    render_wordcloud(df, text_col=text_col, title="Consumer Preference Word Cloud")
     attr_groups = {
         "Protein Type • Whey/Isolate": ["whey", "isolate", "wpi", "concentrate", "hydrolysate"],
         "Protein Type • Casein": ["casein", "micellar"],
@@ -278,6 +298,7 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
     }
     attr_counts = _count_keyword_groups(df.get("combined_text", pd.Series([], dtype=object)), attr_groups)
     attr_series = pd.Series(attr_counts, dtype="int64")
+    # ...existing code...
     if attr_series.sum() > 0:
         horizontal_bar_chart_series(attr_series, title="Mentions by Consumer Preference Group", x_label="Mentions", y_label="Group")
     else:
@@ -291,14 +312,20 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
         stype = row.get("source_type", "")
         title = row.get("title", "")
         url = row.get("url", "")
-        text = row.get("combined_text", "")
+        # Use combined_text if present, else fallback to text (for journals)
+        text = row.get("combined_text")
+        if not (isinstance(text, str) and len(text) > 50):
+            text = row.get("text", "")
         if isinstance(text, str) and len(text) > 50:
-            entries.append(f"[{stype}] {title}\n{text}")
-            refs.append(f"- **{stype}** | [{title}]({url})")
+            entries.append((f"[{stype}] {title}\n{text}", f"- **{stype}** | [{title}]({url})"))
 
+    # Only use the references for the entries actually used in the LLM context
     max_entries = 120
-    context = "\n\n".join(entries[:max_entries])
-    references = "\n".join(refs[:max_entries])
+    context_entries = entries[:max_entries]
+    context = "\n\n".join([e[0] for e in context_entries])
+    references = "\n".join([e[1] for e in context_entries])
+
+    # ...existing code...
 
     openai_prompt = (
         "Analyze the following recent protein market news, research, and discussions. "
