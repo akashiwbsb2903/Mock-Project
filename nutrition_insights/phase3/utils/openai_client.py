@@ -48,7 +48,7 @@ load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = "gpt-4o-mini"
 OPENAI_OSS_MODEL = "openai-oss"
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(api_key=os.getenv(OPENAI_API_KEY))
 
 # Load the main filtered corpus as DataFrame (cached at module level)
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data"))

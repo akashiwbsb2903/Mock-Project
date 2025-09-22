@@ -8,3 +8,4 @@ praw
 beautifulsoup4
 python-dateutil
 plotly>=5.22
+openai==1.108.1
