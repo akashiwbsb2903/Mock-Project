@@ -14,7 +14,7 @@ praw>=7.7.1
 numpy>=1.24,<3
 
 # Vector index
-faiss-cpu==1.8.0.post1   # If pip wheel fails on your OS, see note below.
+faiss-cpu==1.7.4   # If pip wheel fails on your OS, see note below.
 
 # RAG & text utils
 rapidfuzz>=3.9.6         # near-duplicate & fuzzy matching for filtering
