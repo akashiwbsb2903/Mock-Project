@@ -4,8 +4,10 @@ from __future__ import annotations
 import streamlit as st
 from datetime import datetime, timezone
 
-def _utc_now_str() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+def _ist_now_str() -> str:
+    from datetime import timedelta
+    ist = timezone(timedelta(hours=5, minutes=30))
+    return datetime.now(ist).strftime("%Y-%m-%d %H:%M IST")
 
 def render_header(title: str, version: str) -> None:
     """
@@ -16,14 +18,14 @@ def render_header(title: str, version: str) -> None:
     st.markdown(
         """
         <div style='width:100%;text-align:center;margin-top:10px;margin-bottom:8px;'>
-            <span style='font-family:Montserrat,Segoe UI,sans-serif;font-weight:900;font-size:2.8rem;letter-spacing:0.04em;color:#18181b;'>ProteinScope</span><br>
+            <span style='font-family:Montserrat,Segoe UI,sans-serif;font-weight:900;font-size:2.8rem;letter-spacing:0.04em;color:#FFFFFF;'>ProteinScope</span><br>
             <span style='font-family:Montserrat,Segoe UI,sans-serif;font-weight:600;font-size:1.25rem;color:#232326;opacity:0.85;'>v0.1.0</span>
         </div>
         """,
         unsafe_allow_html=True
     )
     st.markdown(
-        f"<div style='text-align:center; font-size:1.05rem; color:#666; margin-bottom:2px;'>Last updated (UTC): {_utc_now_str()}</div>",
+        f"<div style='text-align:center; font-size:1.05rem; color:#666; margin-bottom:2px;'>Last updated (IST): {_ist_now_str()}</div>",
         unsafe_allow_html=True,
     )
     # Subtle divider

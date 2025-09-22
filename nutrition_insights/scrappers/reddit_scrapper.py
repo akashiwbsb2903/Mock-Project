@@ -38,7 +38,7 @@ STATE_FILE = DATA_DIR / "state_reddit.json"
 # ---------- Defaults ----------
 DEFAULT_DAYS = int(os.getenv("REDDIT_DAYS_BACK", "60"))  # 2 MONTHS
 POST_LIMIT = int(os.getenv("REDDIT_POST_CAP", "300"))  # up to 300 posts
-COMMENTS_LIMIT = int(os.getenv("REDDIT_COMMENTS_LIMIT", "20"))  # up to 20 comments per post
+COMMENTS_LIMIT = int(os.getenv("REDDIT_COMMENTS_LIMIT", "10"))  # up to 20 comments per post
 
 SUBREDDITS = [
     "nutrition", "fitness", "supplements", "bodybuilding",

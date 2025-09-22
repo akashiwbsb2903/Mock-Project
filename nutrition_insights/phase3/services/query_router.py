@@ -18,7 +18,7 @@ from nutrition_insights.phase3.utils.common import (
 )
 # Import FAISS retrieval
 from nutrition_insights.phase3.utils.faiss_utils import faiss_topk
-from nutrition_insights.phase3.utils.retrieval import build_context_snippets, Snippet
+from nutrition_insights.rag.retrieval import build_context_snippets, Snippet
 
 # ----------------------------------
 # Public API

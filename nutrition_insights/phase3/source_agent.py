@@ -12,7 +12,7 @@ def select_source_agent(user_query: str) -> str:
     # Keywords for research/journals
     research_keywords = ["research", "study", "studies", "evidence", "journal", "clinical", "trial", "meta-analysis", "systematic review"]
     # Keywords for Reddit/community
-    reddit_keywords = ["experience", "reddit", "community", "forum", "discussion", "opinions", "personal", "users", "thread", "post"]
+    reddit_keywords = ["experience", "reddit", "community", "forum", "discussion", "opinions", "personal", "users", "thread", "post","trend","tredns","trending"]
     if any(word in q for word in research_keywords):
         return "journals"
     # If Reddit/community keywords are present, use both reddit and blogs
@@ -29,3 +29,4 @@ def select_source_agent(user_query: str) -> str:
 #     ... restrict context to reddit and blogs ...
 # else:
 #     ... use all sources ...
+

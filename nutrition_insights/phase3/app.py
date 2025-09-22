@@ -89,19 +89,9 @@ except AttributeError:
 # =============================
 DATA_DIR = find_data_dir()
 with st.sidebar:
-    st.markdown(
-        """
-        <style>
-        .sidebar-title { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.4em; }
-        .sidebar-nav-radio .stRadio label { font-size: 1.02rem; font-weight: 500; }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-    st.markdown('<div class="sidebar-title">Navigation</div>', unsafe_allow_html=True)
     SECTION = st.radio(
-        "Go to",
-        ["Research", "Business Strategies", "ChatBot", "Email/Export"],
+        "Navigation",
+        ["Research", "Business Strategies", "ChatBot", "Export"],
         index=0,
         key="sidebar_nav_radio",
     )
@@ -172,13 +162,10 @@ elif SECTION == "ChatBot":
     st.markdown("## ChatBot")
     _safe(chatbot.render, df, source_filter="All", window_days=30)
 
-elif SECTION == "Email/Export":
-    st.markdown("## Email / Export")
-    # support either export.render or export.render_export
-    if hasattr(export, "render"):
-        _safe(export.render, df=df, source_filter="All", window_days=30)
-    else:
-        _safe(getattr(export, "render_export"), df=df, source_filter="All", window_days=30)
+elif SECTION == "Export":
+    st.markdown("## Export")
+    # Only support export.render
+    _safe(export.render, df=df, source_filter="All", window_days=30)
 
 
 # =============================
@@ -210,9 +197,21 @@ st.markdown("""
             font-size: 0.82rem;
             color: #bdbdbd;
             font-family: Montserrat,Arial,sans-serif;
-            font-weight: 400;
-            opacity: 0.7;
-            white-space: nowrap;
+
+            import json
+            import pandas as pd
+            import streamlit as st
+
+            # =============================
+            # Streamlit Config & Styles
+            # =============================
+            from utils.common import APP_TITLE
+            st.set_page_config(
+                page_title=APP_TITLE,
+                page_icon="🥤",
+                layout="wide",
+                initial_sidebar_state="expanded",
+            )
             overflow: hidden;
             text-overflow: ellipsis;
         }
@@ -231,7 +230,6 @@ st.markdown("""
     <div class='proteinscope-footer'>
         <div class='proteinscope-footer-content'>
             <span>© ProteinScope • {APP_VERSION}</span>
-            <span>Last updated (IST): {last_updated_str}</span>
             <span>Sources: Reddit, PubMed, curated blogs • Not medical or financial advice.</span>
         </div>
     </div>

@@ -184,7 +184,7 @@ PROTEIN_WORDS = {
     "protein", "whey", "casein", "leucine", "bcaa", "eaa",
     "collagen", "amino", "pea", "soy", "isolate", "concentrate",
     "hydrolysate", "shake", "powder", "bar",
-    "egg", "animal", "plant", "animal protein", "plant protein", "amino acids"
+    "egg", "animal", "plant", "animal protein", "plant protein", "amino acids","muscle","muscles","muscle growth","muscle mass","muscle protein synthesis"
 }
 
 def looks_protein_related(text: str) -> bool:

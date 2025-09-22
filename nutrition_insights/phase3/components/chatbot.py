@@ -5,24 +5,18 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 # phase3/components/chatbot.py
 
 import streamlit as st
-st.set_page_config(page_title="Protein Chatbot", page_icon="🤖", layout="wide")
 
-with st.sidebar:
-    st.title("ProteinScope Chatbot")
-    st.markdown("""
-    Ask anything about protein timing, safety, trends, or research. Powered by LLMs and real data sources.
-    """)
 
 import streamlit as st
 import pandas as pd
 
 
-# Use Gemini for LLM, but RAG for retrieval/context
+# Use openai for LLM, but RAG for retrieval/context
 from nutrition_insights.phase3.utils.openai_client import chat_completion, nvidia_oss_chat_completion
 
 # Import RAG retrieval and context logic
 from nutrition_insights.phase3.utils.common import is_in_scope
-from nutrition_insights.phase3.utils.retrieval import build_context_snippets
+from nutrition_insights.rag.retrieval import build_context_snippets
 
 
 def get_openai_response(prompt: str, system: str = None, timeout: int = 60) -> str:
@@ -124,24 +118,15 @@ def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
             pass
 
 
-    # --- Agentic source selection using LangChain agent ---
-    from nutrition_insights.phase3.langchain_agent import select_source_agent
+    # --- Agentic source selection using  agent ---
+    from nutrition_insights.phase3.source_agent import select_source_agent
     agentic_source = select_source_agent(q)
-    st.info(f"[DEBUG] agentic_source selected: {agentic_source}")
     # Filter by agentic source if not 'all'
     if agentic_source == 'reddit_blogs' and 'source' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['source'].str.lower().isin(['reddit', 'blogs'])]
     elif agentic_source != 'all' and 'source' in df_filtered.columns:
         df_filtered = df_filtered[df_filtered['source'].str.lower() == agentic_source]
 
-    # DEBUG: Show dataframe shape and source counts after agentic filtering
-    st.info(f"[DEBUG] df_filtered shape after agentic source: {df_filtered.shape}")
-    if 'source' in df_filtered.columns:
-        st.info(f"[DEBUG] Source value counts: {df_filtered['source'].value_counts().to_dict()}")
-        st.info(f"[DEBUG] Unique sources in df_filtered: {df_filtered['source'].unique().tolist()}")
-
-    # DEBUG: Show the actual dataframe after agentic filtering
-    st.dataframe(df_filtered, use_container_width=True)
 
     # Use both 'text' and 'combined_text' columns for context if available
     df_for_context = df_filtered.copy()
@@ -161,7 +146,6 @@ def render(df: pd.DataFrame, source_filter: str, window_days: int) -> None:
     snippets = build_context_snippets(df_for_context, q, topn=500, agentic_source=agentic_source)
     # DEBUG: Show sources of the final context snippets
     snippet_sources = [getattr(s, 'source', None) for s in snippets]
-    st.info(f"[DEBUG] Sources of final context snippets: {snippet_sources}")
     context = _format_context(snippets)
     # Debug: Show why out of scope
     if not snippets:

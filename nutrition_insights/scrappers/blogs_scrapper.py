@@ -41,7 +41,7 @@ SITES = [
     "https://www.muscleandfitness.com/feed/",
 ]
 
-DEFAULT_DAYS = int(os.getenv("BLOG_DAYS_BACK", "365"))
+DEFAULT_DAYS = int(os.getenv("BLOG_DAYS_BACK", "90"))
 DEFAULT_TOTAL_CAP = int(os.getenv("BLOG_TOTAL_CAP", "300"))
 DEFAULT_PER_DOMAIN_CAP = int(os.getenv("BLOG_PER_DOMAIN_CAP", "50"))
 

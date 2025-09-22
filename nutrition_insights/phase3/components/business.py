@@ -2,12 +2,6 @@
 from __future__ import annotations
 # Modern UI: set page config and sidebar only once at the top
 import streamlit as st
-st.set_page_config(page_title="Protein Business Dashboard", page_icon="📊", layout="wide")
-with st.sidebar:
-    st.title("Protein Business Dashboard")
-    st.markdown("""
-    Explore market trends, consumer preferences, and business opportunities in the protein sector. Powered by LLMs and real-world data.
-    """)
 # phase3/components/business.py
 
 import streamlit as st
@@ -204,7 +198,6 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
         df = df[df["source_type"].str.lower() == source_filter.lower()]
 
     # --- Visualization: Preferred Forms of Protein Consumption ---
-    st.markdown("## 🥤 Preferred Forms of Protein Consumption")
     form_keywords = {
         "Shake/Drink": ["shake", "drink", "rtd", "ready to drink", "bottled"],
         "Bar/Snack": ["bar", "snack", "protein bar", "energy bar", "snack bar"],
@@ -224,14 +217,6 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
                         break
     form_counts = {k: v for k, v in form_counts.items() if v > 0}
     # ...existing code...
-    if form_counts:
-        st.bar_chart(pd.Series(form_counts).sort_values(), use_container_width=True)
-    else:
-        st.info("No clear preference for protein forms detected in this dataset.")
-    """
-    Business Dashboard: Reads combined.json, analyzes with OpenAI,
-    shows attractive insights + visualizations.
-    """
     combined_data, err = cached_analysis(refresh_key, source_filter or "All", model)
     if err:
         st.error(err)
@@ -277,33 +262,7 @@ def render(source_filter: str = None, model: str | None = None, refresh_key: int
     # =========================
     # 2) CONSUMER PREFERENCE TRENDS
     # =========================
-    st.markdown("## 🌱 Consumer Preference Trends")
-    # --- Word Cloud for Consumer Preference Trends ---
-    from nutrition_insights.phase3.utils.wordcloud_utils import render_wordcloud
-    # Use 'combined_text' if available, else fallback to 'text'
-    text_col = 'combined_text' if 'combined_text' in df.columns else 'text'
-    render_wordcloud(df, text_col=text_col, title="Consumer Preference Word Cloud")
-    attr_groups = {
-        "Protein Type • Whey/Isolate": ["whey", "isolate", "wpi", "concentrate", "hydrolysate"],
-        "Protein Type • Casein": ["casein", "micellar"],
-        "Protein Type • Plant": ["plant-based", "plant based", "vegan", "pea protein", "soy protein", "rice protein"],
-        "Protein Type • Collagen": ["collagen", "collagen peptides"],
-        "Format • RTD / Drinks": ["rtd", "ready to drink", "protein shake", "bottled shake"],
-        "Format • Bars/Snacks": ["protein bar", "snack bar", "energy bar"],
-        "Attributes • Low Sugar/Carb": ["low sugar", "no sugar", "sugar-free", "low carb", "keto"],
-        "Attributes • Lactose/Gluten": ["lactose-free", "lactose free", "gluten-free", "gluten free"],
-        "Attributes • Clean/Organic": ["clean label", "organic", "non-gmo", "grass-fed", "natural"],
-        "Taste • Flavors": ["chocolate", "vanilla", "strawberry", "coffee", "cookie", "unflavored", "salted caramel"],
-        "Convenience • Mix/Sachets": ["mixability", "scoop", "single-serve", "sachet", "sticks", "on-the-go"]
-    }
-    attr_counts = _count_keyword_groups(df.get("combined_text", pd.Series([], dtype=object)), attr_groups)
-    attr_series = pd.Series(attr_counts, dtype="int64")
     # ...existing code...
-    if attr_series.sum() > 0:
-        horizontal_bar_chart_series(attr_series, title="Mentions by Consumer Preference Group", x_label="Mentions", y_label="Group")
-    else:
-        st.info("No clear consumer preference keywords detected in this dataset.")
-
     st.divider()
 
     # --- Prepare OpenAI context ---

@@ -38,8 +38,8 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
-
-# Import robust RAG logic only inside functions to avoid circular import
+# Import robust RAG logic
+from nutrition_insights.phase3.services.query_router import is_in_scope, build_context_snippets
 from nutrition_insights.phase3.utils.data import load_data
 
 
@@ -62,9 +62,6 @@ def chat_completion(prompt: str, system: Optional[str] = None, timeout: int = 60
     """
     OpenAI LLM client using robust RAG context and strict out-of-scope handling.
     """
-    # Import here to avoid circular import
-    from nutrition_insights.phase3.utils.common import is_in_scope
-    from nutrition_insights.rag.retrieval import build_context_snippets
     # Strict out-of-scope guard
     if not is_in_scope(prompt):
         return "Out of scope — this question is not related to protein or the available data."
@@ -108,8 +105,8 @@ def chat_completion(prompt: str, system: Optional[str] = None, timeout: int = 60
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"{prompt}\n\n{context}"}
             ],
-            temperature=1,
-            max_tokens=1024,
+            temperature=0.7,
+            max_tokens=512,
             timeout=timeout,
         )
         result = response.choices[0].message.content.strip()
