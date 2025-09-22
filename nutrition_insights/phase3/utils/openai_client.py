@@ -1,9 +1,16 @@
 from typing import Optional
+from dotenv import load_dotenv
+load_dotenv()
+
+import os
+print("OPENAI_API_KEY:", os.getenv("OPENAI_API_KEY"))  # For debug only
+
 def nvidia_oss_chat_completion(prompt: str, system: Optional[str] = None, timeout: int = 60) -> str:
     """
     Use NVIDIA OSS endpoint for chatbot completions.
     """
     from openai import OpenAI
+    load_dotenv(os.path.join(os.path.dirname(__file__), '../.env'))
     client = OpenAI(
         base_url = "https://integrate.api.nvidia.com/v1",
         api_key = os.getenv("NVIDIA_API_KEY")
