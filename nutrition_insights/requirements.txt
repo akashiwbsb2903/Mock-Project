@@ -34,3 +34,5 @@ python-dotenv
 praw
 beautifulsoup4
 python-dateutil
+plotly>=5.22
+openai>=1.40
